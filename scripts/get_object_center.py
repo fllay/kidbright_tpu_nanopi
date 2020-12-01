@@ -2,8 +2,7 @@
 
 
 import rospy
-rospy.init_node('get_center', anonymous=True)
-
+rospy.init_node('get_center', anonymous=False)
 
 import rosnode
 import subprocess

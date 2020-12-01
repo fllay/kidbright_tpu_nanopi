@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import numpy as np
 import cv2
 import rospy
@@ -29,12 +29,13 @@ def camThread(cam):
         
         rate.sleep()
 
+    cam.release() 
 
 
 if __name__ == '__main__':
-    #cam = cv2.VideoCapture(0)
+    #cam = cv2.VideoCapture(1)
     #cam.set(5 , 30) 
-    cam = cv2.VideoCapture('rkisp device=/dev/video6 io-mode=4 ! video/x-raw,format=NV12,width=640,height=480,framerate=15/1 ! videoconvert ! appsink', cv2.CAP_GSTREAMER)
+    cam = cv2.VideoCapture('rkisp device=/dev/video1 io-mode=4 ! video/x-raw,format=NV12,width=640,height=480,framerate=15/1 ! videoconvert ! appsink', cv2.CAP_GSTREAMER)
 
     try:
         camThread(cam)
