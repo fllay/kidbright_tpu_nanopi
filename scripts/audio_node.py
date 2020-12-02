@@ -2,6 +2,7 @@
 # license removed for brevity
 import rospy
 
+
 from sys import byteorder
 from array import array
 from struct import pack
@@ -13,7 +14,7 @@ import numpy as np
 
 #THRESHOLD = 500000
 THRESHOLD = 100000
-CHUNK_SIZE = 4096
+CHUNK_SIZE = 2000
 FORMAT = pyaudio.paInt16
 RATE = 8000
 
@@ -53,7 +54,7 @@ def talker():
     num_silent = 0
     snd_started = False
     num_chunk = 0
-    MAX_CHUNK = 10
+    MAX_CHUNK = 12
 
     
     while not rospy.is_shutdown():

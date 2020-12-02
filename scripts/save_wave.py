@@ -3,7 +3,7 @@ import rospy
 import wave
 from std_msgs.msg import String
 
-rospy.init_node("wave_wait")
+
 sampleRate = 8000.0 # hertz
 
 
