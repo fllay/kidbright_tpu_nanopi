@@ -2,6 +2,7 @@
 import rospy
 import wave
 from std_msgs.msg import String
+from kidbright_tpu.msg import float2d
 import python_speech_features
 import numpy as np
 from matplotlib import pyplot as plt
