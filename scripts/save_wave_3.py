@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import wave
 from std_msgs.msg import String
@@ -17,7 +17,7 @@ class save_wave():
         self.sampleRate = rospy.get_param('~samplingRate', 8000)
         self.fileName = rospy.get_param('~file', "sound.wav")
         self.nFrame = rospy.get_param('~nframe', 5)
-        print self.fileName
+        print(self.fileName)
         self.frame_count = 0
 
         # Set parameters - MFCC
@@ -51,25 +51,25 @@ class save_wave():
 
             # Append msg from publisher to list
             da_o = np.fromstring(msg.data, dtype=np.int16)
-            print da_o
+            print(da_o)
             self.snd_data.extend(da_o)
 
             # Print log
-            print "here"
-            print self.frame_count
+            print("here")
+            print(self.frame_count)
 
             # Close wav object
             if self.frame_count == self.nFrame :
                 self.obj.close()
             
-            print 'Wav file saved successfully.'
+            print('Wav file saved successfully.')
                   
         else: # once recording is done
             #self.frame_count = 0
 
             # Convert snd_data to MFCC and save it
-            print type(self.snd_data[0])
-            print len(self.snd_data)
+            print(type(self.snd_data[0]))
+            print(len(self.snd_data))
             mfccs = python_speech_features.base.mfcc(np.array(self.snd_data), 
                                         samplerate=self.sampleRate,
                                         winlen=0.256,
@@ -82,17 +82,17 @@ class save_wave():
                                         appendEnergy=False,
                                         winfunc=np.hanning)
             np.set_printoptions(suppress=True)
-            print type(mfccs)
-            print mfccs.shape
+            print(type(mfccs))
+            print(mfccs.shape)
             #print(mfccs)
-            print np.matrix(mfccs)
+            print(np.matrix(mfccs))
             #np.savetxt('array_hf.csv', [mfccs], delimiter=',' , header='A Sample 2D Numpy Array :: Header', footer='This is footer')
             # np.savetxt("foo.csv", mfccs, fmt='%f', delimiter=",")
             np.savetxt(self.MFCCfileName, mfccs, fmt='%f', delimiter=",")
-            print 'MFCC saved successfully.'
+            print('MFCC saved successfully.')
 
             # Shutdown node
-            print "Shuttting down"
+            print("Shuttting down")
             rospy.signal_shutdown("Term")
     
 # class save_mfcc():
@@ -129,13 +129,13 @@ class save_wave():
 #                                         winfunc=np.hanning)
 
 if __name__ == '__main__':
-    print "hello"
+    print("hello")
     try:
         save_wave()
         
         rospy.spin()
     except:
-        print "except"
+        print("except")
         pass
 
 
