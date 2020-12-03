@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import wave
 from std_msgs.msg import String
 from kidbright_tpu.msg import float2d
 import python_speech_features
 import numpy as np
-from matplotlib import pyplot as plt
+from kidbright_tpu.msg import int1d
 
 sampleRate = 8000.0 # hertz
 
@@ -23,7 +23,7 @@ class save_wave():
         self.frame_count = 0
 
         #self.number_subscriber = rospy.Subscriber("audio/audio", AudioData, self.callback, queue_size=1)
-        self.a1_sub = rospy.Subscriber("a1", String, self.callback, queue_size=1)
+        self.a1_sub = rospy.Subscriber("/audio_int", int1d, self.callback, queue_size=1)
         
         
         rospy.loginfo("Record wave file")
@@ -41,9 +41,9 @@ class save_wave():
             
             self.frame_count += 1
             #self.obj.writeframesraw(msg.data )
-            da_o = np.fromstring(msg.data, dtype=np.int16)
-            print(da_o)
-            self.snd_data.extend(da_o)
+            #da_o = np.fromstring(msg.data, dtype=np.int16)
+            #print(da_o)
+            self.snd_data.extend(msg.data)
 
             print("here")
             print(self.frame_count)
@@ -74,6 +74,7 @@ class save_wave():
             print(np.matrix(mfccs))
             #np.savetxt('array_hf.csv', [mfccs], delimiter=',' , header='A Sample 2D Numpy Array :: Header', footer='This is footer')
             np.savetxt("foo.csv", mfccs, fmt='%f', delimiter=",")
+            np.savetxt("wav.csv", self.snd_data, fmt='%d', delimiter=",")
             print("Shuttting down")
   
 

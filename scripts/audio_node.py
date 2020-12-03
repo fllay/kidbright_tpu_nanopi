@@ -13,20 +13,22 @@ import wave
 import numpy as np
 
 #THRESHOLD = 500000
-THRESHOLD = 100000
+#THRESHOLD = 100000
+THRESHOLD = 1000
 CHUNK_SIZE = 2000
 FORMAT = pyaudio.paInt16
 RATE = 8000
 
 
 from audio_common_msgs.msg import AudioData
+from kidbright_tpu.msg import int1d
 from std_msgs.msg import String
 
 
-def is_silent(snd_data):
+def is_silent(snd_data, thres):
     "Returns 'True' if below the 'silent' threshold"
     #print sum(np.multiply(snd_data, snd_data))/len(snd_data)
-    return sum(np.multiply(snd_data, snd_data))/len(snd_data) < THRESHOLD
+    return sum(np.multiply(snd_data, snd_data))/len(snd_data) < thres
 
 def normalize(snd_data):
     "Average the volume out"
@@ -43,12 +45,22 @@ def normalize(snd_data):
 def talker():
     #pub = rospy.Publisher('audio/audio', AudioData, queue_size=1)
     pub_a = rospy.Publisher('a1', String, queue_size=10)
+    pub_aint = rospy.Publisher('audio_int', int1d, queue_size=10)
     
+
     rospy.init_node('audio_stream', anonymous=True)
+    sampleRate = rospy.get_param('~samplingRate', 8000)
+    nchannels = rospy.get_param('~nchannels', 1)
+    soundCardNumber = rospy.get_param('~soundCardNumber', 2)
+    thres = rospy.get_param('~THRESHOLD', 1000)
+    print(sampleRate)    
+    print(nchannels) 
+    print(soundCardNumber) 
+    print(thres)
     rate = rospy.Rate(10) # 10hz
     p = pyaudio.PyAudio()
-    stream = p.open(format=FORMAT, channels=1, rate=RATE,
-        input=True, output=False, input_device_index=2,
+    stream = p.open(format=FORMAT, channels=nchannels, rate=sampleRate,
+        input=True, output=False, input_device_index=soundCardNumber,
         frames_per_buffer=CHUNK_SIZE)
 
     num_silent = 0
@@ -62,7 +74,7 @@ def talker():
         if byteorder == 'big':
             snd_data.byteswap()
 
-        silent = is_silent(snd_data)
+        silent = is_silent(snd_data, thres)
 
 
         if silent and snd_started:
@@ -83,9 +95,12 @@ def talker():
             #pub.publish(ad)
             #rospy.loginfo(snd_data)
             bb = np.fromstring(snd_data, dtype=np.uint8).tobytes()
+            cc = int1d()
+            cc.data = np.fromstring(snd_data, dtype=np.int16)
             #print bb
             
             pub_a.publish(str(bb))
+            pub_aint.publish(cc)
             
             if num_chunk >= MAX_CHUNK:
                 num_chunk = 0

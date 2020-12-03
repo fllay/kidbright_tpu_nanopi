@@ -56,6 +56,8 @@ add_message_files(
    tpu_objects.msg
    lino_imu.msg
    float2d.msg
+   int1d.msg
+   float1d.msg
  )
 
 ## Generate services in the 'srv' folder
