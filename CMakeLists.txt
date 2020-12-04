@@ -174,6 +174,7 @@ install(PROGRAMS
    scripts/tpu_classify.py
    scripts/save_wave.py
    scripts/audio_node.py
+   scripts/wakeword_classify.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 

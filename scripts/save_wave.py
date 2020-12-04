@@ -18,6 +18,7 @@ class save_wave():
         self.fileName = rospy.get_param('~file', "sound.wav")
         self.nFrame = rospy.get_param('~nframe', 5)
         print self.fileName
+
         self.frame_count = 0
 
         # Set parameters - MFCC
@@ -129,13 +130,13 @@ class save_wave():
 #                                         winfunc=np.hanning)
 
 if __name__ == '__main__':
-    print "hello"
+    print("hello")
     try:
         save_wave()
         
         rospy.spin()
     except:
-        print "except"
+        print("except")
         pass
 
 
