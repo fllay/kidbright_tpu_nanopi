@@ -4,6 +4,9 @@ import wave
 from std_msgs.msg import String
 import numpy as np
 import python_speech_features
+import matplotlib
+matplotlib.use('Agg') # to suppress plt.show()
+import matplotlib.pyplot as plt
 
 sampleRate = 8000.0 # hertz
 
@@ -25,7 +28,8 @@ class save_wave():
         self.snd_data = []
         self.num_mfcc = 16
         self.len_mfcc = 16
-        self.MFCCfileName = rospy.get_param('~mfccfile', "foo_2.csv")
+        self.MFCCTextFileName = rospy.get_param('~mfcc_text_file', "foo_2.csv")
+        self.MFCCImageFileName = rospy.get_param('~mfcc_image_file', "mfcc.jpg")
 
         #self.number_subscriber = rospy.Subscriber("audio/audio", AudioData, self.callback, queue_size=1)
         # Subscribe to "a1" publisher
@@ -69,8 +73,8 @@ class save_wave():
             #self.frame_count = 0
 
             # Convert snd_data to MFCC and save it
-            print type(self.snd_data[0])
-            print len(self.snd_data)
+            # print type(self.snd_data[0])
+            print 'Number of frames recorded: ' + str(len(self.snd_data))
             mfccs = python_speech_features.base.mfcc(np.array(self.snd_data), 
                                         samplerate=self.sampleRate,
                                         winlen=0.256,
@@ -82,52 +86,27 @@ class save_wave():
                                         ceplifter=0,
                                         appendEnergy=False,
                                         winfunc=np.hanning)
+            mfccs = mfccs.transpose()
             np.set_printoptions(suppress=True)
-            print type(mfccs)
-            print mfccs.shape
+            # print type(mfccs)
+            print 'MFCC sahpe: ' + str(mfccs.shape)
             #print(mfccs)
-            print np.matrix(mfccs)
+            # print np.matrix(mfccs)
             #np.savetxt('array_hf.csv', [mfccs], delimiter=',' , header='A Sample 2D Numpy Array :: Header', footer='This is footer')
             # np.savetxt("foo.csv", mfccs, fmt='%f', delimiter=",")
-            np.savetxt(self.MFCCfileName, mfccs, fmt='%f', delimiter=",")
+
+            # Save MFCC text file - used for training
+            np.savetxt(self.MFCCTextFileName, mfccs, fmt='%f', delimiter=",")
+
+            # Create and save MFCC image
+            plt.imshow(mfccs, cmap='inferno', origin='lower')
+            plt.savefig(self.MFCCImageFileName)
             print 'MFCC saved successfully.'
 
             # Shutdown node
             print "Shuttting down"
             rospy.signal_shutdown("Term")
     
-# class save_mfcc():
-#     def __init__(self):
-
-#         rospy.init_node("mfcc_wait")
-#         #rospy.wait_for_message("audio/audio", AudioData)
-#         self.sampleRate = rospy.get_param('~samplingRate', 8000)
-#         self.fileName = rospy.get_param('~file', "sound.wav")
-#         self.nFrame = rospy.get_param('~nframe', 5)
-#         print self.fileName 
-#         self.frame_count = 0
-
-#         #self.number_subscriber = rospy.Subscriber("audio/audio", AudioData, self.callback, queue_size=1)
-#         self.a1_sub = rospy.Subscriber("a1", String, self.callback, queue_size=1)
-        
-#         rospy.loginfo("Record wave file")
-#         self.obj = wave.open(self.fileName,'w')
-#         self.obj.setnchannels(1) # mono
-#         self.obj.setsampwidth(2)
-#         self.obj.setframerate(self.sampleRate)
-
-
-#         mfccs = python_speech_features.base.mfcc(np.array(self.snd_data), 
-#                                         samplerate=self.sampleRate,
-#                                         winlen=0.256,
-#                                         winstep=0.050,
-#                                         numcep=self.num_mfcc,
-#                                         nfilt=26,
-#                                         nfft=2048,
-#                                         preemph=0.0,
-#                                         ceplifter=0,
-#                                         appendEnergy=False,
-#                                         winfunc=np.hanning)
 
 if __name__ == '__main__':
     print("hello")

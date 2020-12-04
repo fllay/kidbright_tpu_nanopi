@@ -57,6 +57,7 @@ def talker():
     print(nchannels) 
     print(soundCardNumber) 
     print(thres)
+    print '----------------------------'
     rate = rospy.Rate(10) # 10hz
     p = pyaudio.PyAudio()
     stream = p.open(format=FORMAT, channels=nchannels, rate=sampleRate,
@@ -97,7 +98,7 @@ def talker():
             bb = np.fromstring(snd_data, dtype=np.uint8).tobytes()
             cc = int1d()
             cc.data = np.fromstring(snd_data, dtype=np.int16)
-            #print bb
+            # print bb
             
             pub_a.publish(str(bb))
             pub_aint.publish(cc)
