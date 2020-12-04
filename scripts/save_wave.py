@@ -16,7 +16,7 @@ class save_wave():
         self.sampleRate = rospy.get_param('~samplingRate', 8000)
         self.fileName = rospy.get_param('~file', "sound.wav")
         self.nFrame = rospy.get_param('~nframe', 5)
-        print self.fileName 
+        print(self.fileName) 
         self.frame_count = 0
 
         #self.number_subscriber = rospy.Subscriber("audio/audio", AudioData, self.callback, queue_size=1)
@@ -47,7 +47,7 @@ class save_wave():
             
         else:
             #self.frame_count = 0
-            print "Shuttting down"
+            print("Shuttting down")
             rospy.signal_shutdown("Term")
     
 
@@ -55,13 +55,13 @@ class save_wave():
 
 
 if __name__ == '__main__':
-    print "hello"
+    print("hello")
     try:
         save_wave()
         
         rospy.spin()
     except:
-        print "except"
+        print("except")
         pass
 
 
