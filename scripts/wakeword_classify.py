@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import rospy
 import wave
 from std_msgs.msg import String
@@ -6,6 +6,8 @@ from kidbright_tpu.msg import float2d
 import python_speech_features
 import numpy as np
 from kidbright_tpu.msg import int1d
+# import tensorflow.compat.v1 as tf
+# from tensorflow.keras import layers, models
 
 sampleRate = 8000.0 # hertz
 
@@ -13,13 +15,12 @@ sampleRate = 8000.0 # hertz
 
 class save_wave():
     def __init__(self):
+
         rospy.init_node('wake_class_wait')
         
         #rospy.wait_for_message("audio/audio", AudioData)
         self.sampleRate = 8000
-        
-        self.nFrame = 4
-        
+        # self.nFrame = 4
         self.frame_count = 0
 
         #self.number_subscriber = rospy.Subscriber("audio/audio", AudioData, self.callback, queue_size=1)
@@ -32,6 +33,11 @@ class save_wave():
         self.snd_data = []
         self.num_mfcc = 16
         self.len_mfcc = 16
+
+        self.MFCCTextFileName = rospy.get_param('~mfcc_text_file', "foo_2.csv")
+        self.nFrame = rospy.get_param('~nframe', 4)
+        self.model_file = rospy.get_param('~model', "/home/pi/kb_2/models/model.h5")
+        # self.model = models.load_model(self.model_file)
         
         
 
@@ -70,16 +76,26 @@ class save_wave():
             np.set_printoptions(suppress=True)
             print(type(mfccs))
             print(mfccs.shape)
-            #print(mfccs)
-            print(np.matrix(mfccs))
+            # print(mfccs)
+            # print(np.matrix(mfccs))
             #np.savetxt('array_hf.csv', [mfccs], delimiter=',' , header='A Sample 2D Numpy Array :: Header', footer='This is footer')
-            np.savetxt("foo.csv", mfccs, fmt='%f', delimiter=",")
-            np.savetxt("wav.csv", self.snd_data, fmt='%d', delimiter=",")
+            np.savetxt(self.MFCCTextFileName, mfccs, fmt='%f', delimiter=",")
+            # np.savetxt("wav.csv", self.snd_data, fmt='%d', delimiter=",")
             print("Shuttting down")
-  
+
+            # # Reshape mfccs to have 1 more dimension
+            # x = mfccs.reshape(mfccs.shape[0], 
+            #               mfccs.shape[1], 
+            #               1)
+
+            # Make prediction
+            # prediction = self.model.predict(x)
+            # prediction = 1
+
 
             rospy.signal_shutdown("Term")
     
+        # return 'prediction'
 
 
 
