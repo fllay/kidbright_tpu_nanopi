@@ -86,10 +86,12 @@ class save_wave():
                                         ceplifter=0,
                                         appendEnergy=False,
                                         winfunc=np.hanning)
+
+            # Transpose MFCC, so that it is a time domain graph
             mfccs = mfccs.transpose()
             np.set_printoptions(suppress=True)
             # print type(mfccs)
-            print 'MFCC sahpe: ' + str(mfccs.shape)
+            print 'MFCC shape: ' + str(mfccs.shape)
             #print(mfccs)
             # print np.matrix(mfccs)
             #np.savetxt('array_hf.csv', [mfccs], delimiter=',' , header='A Sample 2D Numpy Array :: Header', footer='This is footer')
