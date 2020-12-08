@@ -34,18 +34,24 @@ class inference():
 
         # Get params
         self.model_file = rospy.get_param('~model', "/home/pi/kb_2/models/model.h5")
+        self.nFrame = rospy.get_param('~nframe', 4)
+        self.terminate = bool(rospy.get_param('~terminate', False))
+        print('self.terminate\n', self.terminate, type(self.terminate))
 
         # Load the trained model
         self.model = models.load_model(self.model_file)
 
     def callback(self, msg):
 
+        if self.terminate:
+            rospy.signal_shutdown("Term")
+
         # Extend subscribed message            
         self.frame_count += 1
         self.snd_data.extend(msg.data)
                 
-        # Calculate MFCC and run inference every 4 frames
-        if self.frame_count > 0 and self.frame_count % 4 == 0:
+        # Calculate MFCC and run inference every n frames
+        if self.frame_count > 0 and self.frame_count % self.nFrame == 0:
 
             # Calculate MFCC
             mfccs = python_speech_features.base.mfcc(np.array(self.snd_data), 
@@ -81,7 +87,7 @@ class inference():
             self.pred_pub.publish(prediction)
 
             # rospy.signal_shutdown("Term")
-            
+
 
 if __name__ == '__main__':
     print("hello")
