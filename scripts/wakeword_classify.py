@@ -17,6 +17,26 @@ class inference():
     def __init__(self):
 
         rospy.init_node('wake_class_wait')
+
+        # Settings
+        self.sampleRate = 8000
+        self.fps = int(self.sampleRate / 4)
+        self.frame_count = 0
+        self.snd_data = []
+        self.num_mfcc = 16
+        self.len_mfcc = 16
+        self.start_index = 0
+        self.window_stride = 2
+        self.count = 0
+
+        # Get params
+        self.model_file = rospy.get_param('~model', "/home/pi/kb_2/models/model.h5")
+        self.nFrame = rospy.get_param('~nframe', 4)
+        self.terminate = bool(rospy.get_param('~terminate', False))
+        # print('self.terminate\n', self.terminate, type(self.terminate))
+
+        if self.terminate:
+            rospy.signal_shutdown("Term")
         
         # Subscribe to audio_int
         self.a1_sub = rospy.Subscriber("/audio_int", int1d, self.callback, queue_size=1)
@@ -25,72 +45,93 @@ class inference():
         # Add publisher to publish inference result in real-time
         self.pred_pub = rospy.Publisher('inference', float1d, queue_size=10)
        
-        # Settings
-        self.sampleRate = 8000
-        self.frame_count = 0
-        self.snd_data = []
-        self.num_mfcc = 16
-        self.len_mfcc = 16
-
-        # Get params
-        self.model_file = rospy.get_param('~model', "/home/pi/kb_2/models/model.h5")
-        self.nFrame = rospy.get_param('~nframe', 4)
-        self.terminate = bool(rospy.get_param('~terminate', False))
-        print('self.terminate\n', self.terminate, type(self.terminate))
-
         # Load the trained model
         self.model = models.load_model(self.model_file)
 
     def callback(self, msg):
 
-        if self.terminate:
-            rospy.signal_shutdown("Term")
-
         # Extend subscribed message            
         self.frame_count += 1
         self.snd_data.extend(msg.data)
                 
-        # Calculate MFCC and run inference every n frames
-        if self.frame_count > 0 and self.frame_count % self.nFrame == 0:
+        # Calculate MFCC and run inference every "window_stride" frames
+        if self.frame_count == self.nFrame:
+            if self.count == self.window_stride:
+                # Calculate MFCC
+                mfccs = python_speech_features.base.mfcc(np.array(self.snd_data[self.start_index*self.fps:(self.start_index+self.nFrame)*self.fps]), 
+                                            samplerate=self.sampleRate,
+                                            winlen=0.256,
+                                            winstep=0.050,
+                                            numcep=self.num_mfcc,
+                                            nfilt=26,
+                                            nfft=2048,
+                                            preemph=0.0,
+                                            ceplifter=0,
+                                            appendEnergy=False,
+                                            winfunc=np.hanning)
 
-            # Calculate MFCC
-            mfccs = python_speech_features.base.mfcc(np.array(self.snd_data), 
-                                        samplerate=self.sampleRate,
-                                        winlen=0.256,
-                                        winstep=0.050,
-                                        numcep=self.num_mfcc,
-                                        nfilt=26,
-                                        nfft=2048,
-                                        preemph=0.0,
-                                        ceplifter=0,
-                                        appendEnergy=False,
-                                        winfunc=np.hanning)
+                # Transpose MFCC, so that it is a time domain graph
+                mfccs = mfccs.transpose()
+                np.set_printoptions(suppress=True)
 
-            # Transpose MFCC, so that it is a time domain graph
-            mfccs = mfccs.transpose()
-            np.set_printoptions(suppress=True)
-            # print(mfccs.shape)
+                # Reshape mfccs to have 1 more dimension
+                x = mfccs.reshape(1, mfccs.shape[0], 
+                                mfccs.shape[1], 1)
 
-            # Reshape mfccs to have 1 more dimension
-            x = mfccs.reshape(1, mfccs.shape[0], 
-                              mfccs.shape[1], 1)
+                # Make prediction
+                prediction = self.model.predict(x)
+                print(self.frame_count, ':', prediction)
 
-            # Make prediction
-            prediction = self.model.predict(x)
-            print(self.frame_count, ':', prediction)
-            # print('\nPrediction:\n', prediction)
+                # Reset count
+                self.count = 0
 
-            # Reset snd_data
-            self.snd_data = []
+                # Add stride to start_index
+                self.start_index += self.window_stride
 
-            # Publish the prediction
-            self.pred_pub.publish(prediction)
+                # Publish the prediction
+                self.pred_pub.publish(prediction)
 
-            # rospy.signal_shutdown("Term")
+        if self.frame_count > self.nFrame:# and self.frame_count % self.nFrame == 0:
+            self.count += 1
+
+            if self.count == self.window_stride:
+                # Calculate MFCC
+                mfccs = python_speech_features.base.mfcc(np.array(self.snd_data[self.start_index*self.fps:(self.start_index+self.nFrame)*self.fps]), 
+                                            samplerate=self.sampleRate,
+                                            winlen=0.256,
+                                            winstep=0.050,
+                                            numcep=self.num_mfcc,
+                                            nfilt=26,
+                                            nfft=2048,
+                                            preemph=0.0,
+                                            ceplifter=0,
+                                            appendEnergy=False,
+                                            winfunc=np.hanning)
+
+                # Transpose MFCC, so that it is a time domain graph
+                mfccs = mfccs.transpose()
+                np.set_printoptions(suppress=True)
+
+                # Reshape mfccs to have 1 more dimension
+                x = mfccs.reshape(1, mfccs.shape[0], 
+                                mfccs.shape[1], 1)
+
+                # Make prediction
+                prediction = self.model.predict(x)
+                print(self.frame_count, ':', prediction)
+
+                # Reset count
+                self.count = 0
+
+                # Add stride to start_index
+                self.start_index += self.window_stride
+
+                # Publish the prediction
+                self.pred_pub.publish(prediction)
 
 
 if __name__ == '__main__':
-    print("hello")
+    print("hello meme")
     inference()
     try:
         rospy.spin()
