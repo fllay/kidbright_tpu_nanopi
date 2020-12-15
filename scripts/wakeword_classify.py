@@ -9,6 +9,7 @@ from kidbright_tpu.msg import int1d
 import tensorflow.compat.v1 as tf
 from tensorflow.keras import layers, models
 import time
+import pickle
 
 sampleRate = 8000.0 # hertz
 
@@ -32,8 +33,14 @@ class inference():
         # Get params
         self.model_file = rospy.get_param('~model', "/home/pi/kb_2/models/model.h5")
         self.nFrame = rospy.get_param('~nframe', 4)
+        self.output_type = rospy.get_param('~noutput_type', 'categorical_crossentropy')
         self.terminate = bool(rospy.get_param('~terminate', False))
         # print('self.terminate\n', self.terminate, type(self.terminate))
+
+        # Load label_map
+        with open('/home/pi/kb_2/label_map.pkl', 'rb') as pkl_file:
+            self.label_map = pickle.load(pkl_file)
+
 
         if self.terminate:
             rospy.signal_shutdown("Term")
@@ -43,7 +50,11 @@ class inference():
         rospy.loginfo("Running inference ...")
 
         # Add publisher to publish inference result in real-time
-        self.pred_pub = rospy.Publisher('inference', float1d, queue_size=10)
+        if self.output_type == 'binary_crossentropy':
+            self.pred_pub = rospy.Publisher('inference', float1d, queue_size=10)
+        else: # categorical_crossentropy
+            self.pred_pub = rospy.Publisher('inference', String, queue_size=10)
+        
        
         # Load the trained model
         self.model = models.load_model(self.model_file)
@@ -89,7 +100,18 @@ class inference():
                 self.start_index += self.window_stride
 
                 # Publish the prediction
-                self.pred_pub.publish(prediction)
+                if self.output_type == 'binary_crossentropy':
+                    self.pred_pub.publish(prediction)
+                else: # categorical_crossentropy
+                    # self.pred_pub.publish(self.label_map[np.argmax(prediction[0])])
+                    # print(self.label_map[np.argmax(prediction[0])])
+
+                    argmax = np.argmax(prediction[0])
+                    if prediction[0][argmax] >= 0.9:
+                        self.pred_pub.publish(self.label_map[np.argmax(prediction[0])])
+                        print(self.label_map[np.argmax(prediction[0])])
+                    else:
+                        self.pred_pub.publish('None')
 
         if self.frame_count > self.nFrame:# and self.frame_count % self.nFrame == 0:
             self.count += 1
@@ -127,7 +149,18 @@ class inference():
                 self.start_index += self.window_stride
 
                 # Publish the prediction
-                self.pred_pub.publish(prediction)
+                if self.output_type == 'binary_crossentropy':
+                    self.pred_pub.publish(prediction)
+                else: # categorical_crossentropy
+                    argmax = np.argmax(prediction[0])
+                    if prediction[0][argmax] >= 0.9:
+                        self.pred_pub.publish(self.label_map[np.argmax(prediction[0])])
+                        print(self.label_map[np.argmax(prediction[0])])
+                    else:
+                        self.pred_pub.publish('None')
+
+                # # Publish the prediction
+                # self.pred_pub.publish(prediction)
 
 
 if __name__ == '__main__':
