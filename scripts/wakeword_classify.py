@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 import rospy
 import wave
 from std_msgs.msg import String
