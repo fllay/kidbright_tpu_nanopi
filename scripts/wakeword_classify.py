@@ -33,15 +33,18 @@ class inference():
         # Get params
         self.model_file = rospy.get_param('~model', "/home/pi/kb_2/models/model.h5")
         self.nFrame = rospy.get_param('~nframe', 4)
-        self.output_type = rospy.get_param('~noutput_type', 'categorical_crossentropy')
+        self.output_type = rospy.get_param('~output_type', 'categorical_crossentropy')
+        # self.binary_threshold = float(rospy.get_param('~binary_threshold', 0.5))
+        self.categorical_threshold = float(rospy.get_param('~categorical_threshold', 0.5))
         self.terminate = bool(rospy.get_param('~terminate', False))
         # print('self.terminate\n', self.terminate, type(self.terminate))
+        print('output_type:\n', self.output_type)
 
         # Load label_map
         with open('/home/pi/kb_2/label_map.pkl', 'rb') as pkl_file:
             self.label_map = pickle.load(pkl_file)
 
-
+        # See if it is to be terminated
         if self.terminate:
             rospy.signal_shutdown("Term")
         
@@ -107,7 +110,7 @@ class inference():
                     # print(self.label_map[np.argmax(prediction[0])])
 
                     argmax = np.argmax(prediction[0])
-                    if prediction[0][argmax] >= 0.9:
+                    if prediction[0][argmax] >= self.categorical_threshold:
                         self.pred_pub.publish(self.label_map[np.argmax(prediction[0])])
                         print(self.label_map[np.argmax(prediction[0])])
                     else:
@@ -153,7 +156,7 @@ class inference():
                     self.pred_pub.publish(prediction)
                 else: # categorical_crossentropy
                     argmax = np.argmax(prediction[0])
-                    if prediction[0][argmax] >= 0.9:
+                    if prediction[0][argmax] >= self.categorical_threshold:
                         self.pred_pub.publish(self.label_map[np.argmax(prediction[0])])
                         print(self.label_map[np.argmax(prediction[0])])
                     else:
