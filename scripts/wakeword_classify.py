@@ -41,7 +41,7 @@ class inference():
         print('output_type:\n', self.output_type)
 
         # Load label_map
-        with open('/home/pi/kb_2/label_map.pkl', 'rb') as pkl_file:
+        with open('/home/pi/kbclientNew/server/kb_2/label_map.pkl', 'rb') as pkl_file:
             self.label_map = pickle.load(pkl_file)
 
         # See if it is to be terminated
